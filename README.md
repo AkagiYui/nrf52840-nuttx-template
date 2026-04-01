@@ -1,6 +1,8 @@
-# XIAO nRF52840 NuttX 开发模板
+# nRF52840 NuttX 开发模板
 
 本仓库是 Seeed Studio XIAO nRF52840 开发板的 NuttX RTOS 开发模板，使用 Git Submodules 管理依赖，包含自定义 LED 控制应用（xled）。
+
+以下命令都是基于 macOS 系统进行操作。
 
 ## 功能特性
 
@@ -15,7 +17,7 @@
 ## 目录结构
 
 ```
-xiao-nrf52840-template/
+nrf52840-nuttx-template/
 ├── nuttx/                   # Git Submodule: NuttX 内核
 ├── apps/                    # Git Submodule: NuttX 应用
 ├── uf2/                     # Git Submodule: UF2 工具
@@ -27,9 +29,6 @@ xiao-nrf52840-template/
 │       └── CMakeLists.txt  # CMake 构建配置
 ├── configs/
 │   └── defconfig           # NuttX 配置文件
-├── scripts/
-│   ├── setup.sh            # 初始化 submodules
-│   └── build.sh            # 构建脚本
 ├── .gitmodules             # Submodules 配置
 ├── .gitignore
 └── README.md
@@ -37,19 +36,37 @@ xiao-nrf52840-template/
 
 ## 环境要求
 
-- Linux / macOS
+- macOS
 - Python 3
 - Git
 - ARM 交叉编译工具链（arm-none-eabi-gcc）
 
-macOS 安装工具链：
-```bash
-brew install --cask gcc-aarch64-embedded
+https://nuttx.apache.org/docs/12.2.0/quickstart/install.html
+
+安装工具链：
+
+```zsh
+git clone https://bitbucket.org/nuttx/tools.git
+cd tools/kconfig-frontends
+patch < ../kconfig-macos.diff -p 1
+./configure --enable-mconf --disable-shared --enable-static --disable-gconf --disable-qconf --disable-nconf
+make
+sudo make install
 ```
 
-Ubuntu/Debian 安装工具链：
-```bash
-sudo apt install gcc-arm-none-eabi
+```zsh
+mkdir -p ~/gcc
+cd ~/gcc
+HOST_PLATFORM=mac
+curl -L -O https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/gcc-arm-none-eabi-9-2019-q4-major-${HOST_PLATFORM}.tar.bz2
+tar xf gcc-arm-none-eabi-9-2019-q4-major-${HOST_PLATFORM}.tar.bz2
+
+echo "export PATH=~/gcc/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH" >> ~/.zshrc
+source ~/.zshrc
+```
+
+```zsh
+brew install flock
 ```
 
 ## 快速开始
@@ -58,8 +75,8 @@ sudo apt install gcc-arm-none-eabi
 
 克隆时自动初始化 submodules：
 ```bash
-git clone --recurse-submodules <你的仓库地址> xiao-nrf52840-template
-cd xiao-nrf52840-template
+git clone --recurse-submodules <你的仓库地址> nrf52840-nuttx-template
+cd nrf52840-nuttx-template
 ```
 
 如果已经克隆但没有 submodules，手动初始化：
@@ -122,9 +139,7 @@ make olddefconfig
 
 在 nuttx 目录下执行编译：
 ```bash
-make -j$(nproc)  # Linux
-# 或
-make -j$(sysctl -n hw.ncpu)  # macOS
+make -j
 ```
 
 编译成功后生成 `nuttx.hex` 文件。
@@ -144,11 +159,7 @@ python3 ../uf2/utils/uf2conv.py -c -f 0xADA52840 -i nuttx.hex -o nuttx.uf2
 4. 将 `nuttx.uf2` 复制到该设备：
 
 ```bash
-# macOS
 cp nuttx/nuttx.uf2 /Volumes/XIAO-SENSE/
-
-# Linux
-cp nuttx/nuttx.uf2 /media/$USER/XIAO-SENSE/
 ```
 
 ### 4. 连接串口
@@ -321,7 +332,3 @@ cp defconfig ../configs/defconfig
 - [NuttX XIAO nRF52840 文档](https://nuttx.apache.org/docs/latest/platforms/arm/nrf52/boards/xiao-nrf52840/index.html)
 - [Seeed Studio XIAO nRF52840 Wiki](https://wiki.seeedstudio.com/XIAO_BLE/)
 - [UF2 工具](https://github.com/microsoft/uf2)
-
-## 许可证
-
-本模板代码采用 Apache-2.0 许可证。NuttX 和相关组件遵循其各自许可证。
