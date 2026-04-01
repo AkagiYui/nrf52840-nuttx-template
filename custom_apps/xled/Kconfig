@@ -1,0 +1,33 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config APPS_XLED
+	tristate "XIAO nRF52840 LED Control Application"
+	default n
+	depends on USERLED
+	---help---
+		XIAO nRF52840 LED control application. Provides command-line
+		control of the onboard RGB LED via /dev/userleds.
+
+		Commands: on, off, set, get, blink, rgb
+
+if APPS_XLED
+
+config APPS_XLED_PROGNAME
+	string "Program name"
+	default "xled"
+	---help---
+		This is the name of the program that will be used when the NSH ELF
+		program is installed.
+
+config APPS_XLED_PRIORITY
+	int "LED control task priority"
+	default 100
+
+config APPS_XLED_STACKSIZE
+	int "LED control stack size"
+	default DEFAULT_TASK_STACKSIZE
+
+endif # APPS_XLED
