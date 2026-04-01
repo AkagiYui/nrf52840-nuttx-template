@@ -26,6 +26,7 @@ nrf52840-nuttx-template/
 │       ├── xled_main.c     # 主程序源码
 │       ├── Kconfig         # Kconfig 配置
 │       ├── Make.defs       # Make 构建定义
+│       ├── Makefile        # Make 构建脚本
 │       └── CMakeLists.txt  # CMake 构建配置
 ├── configs/
 │   └── defconfig           # NuttX 配置文件
@@ -99,28 +100,9 @@ git submodule update --init --recursive
 ln -s $(pwd)/custom_apps/xled apps/xled
 ```
 
-#### 步骤 2.2：修改 apps/Kconfig
+> **注意**：新版本的 NuttX apps 使用自动发现机制，创建符号链接后无需手动修改 `apps/` 目录下的文件（Kconfig、Make.defs、CMakeLists.txt）。
 
-在 `apps/Kconfig` 文件中，找到 `endmenu` 行，在其前面添加：
-```
-source "$APPSDIR/xled/Kconfig"
-```
-
-#### 步骤 2.3：修改 apps/Make.defs
-
-在 `apps/Make.defs` 文件末尾添加：
-```makefile
-include $(wildcard $(APPDIR)/xled/Make.defs)
-```
-
-#### 步骤 2.4：修改 apps/CMakeLists.txt
-
-在 `apps/CMakeLists.txt` 文件末尾添加：
-```cmake
-add_subdirectory_ifdef(CONFIG_APPS_XLED xled)
-```
-
-#### 步骤 2.5：配置 NuttX
+#### 步骤 2.2：配置 NuttX
 
 进入 nuttx 目录，清理并配置：
 ```bash
@@ -135,7 +117,7 @@ cat ../configs/defconfig >> .config
 make olddefconfig
 ```
 
-#### 步骤 2.6：编译固件
+#### 步骤 2.3：编译固件
 
 在 nuttx 目录下执行编译：
 ```bash
@@ -144,7 +126,7 @@ make -j
 
 编译成功后生成 `nuttx.hex` 文件。
 
-#### 步骤 2.7：转换为 UF2 格式
+#### 步骤 2.4：转换为 UF2 格式
 
 使用 uf2 工具转换固件格式：
 ```bash
@@ -248,7 +230,7 @@ nsh> xled rgb 1 0 1    # 蓝=开 红=关 绿=开
 
 ### 仅配置（不编译）
 
-执行上面的步骤 2.1-2.5，配置完成后不执行编译。
+执行上面的步骤 2.1-2.2，配置完成后不执行编译。
 
 ### 清理构建产物
 
@@ -260,18 +242,10 @@ make distclean
 
 ### 恢复 apps 子模块到原始状态
 
-如果需要移除对 apps 目录的修改：
-
-1. 删除 xled 符号链接：
-   ```bash
-   rm apps/xled
-   ```
-
-2. 从 `apps/Kconfig` 中删除包含 `xled/Kconfig` 的行
-
-3. 从 `apps/Make.defs` 中删除包含 `xled/Make.defs` 的行
-
-4. 从 `apps/CMakeLists.txt` 中删除包含 `CONFIG_APPS_XLED` 的行
+只需删除 xled 符号链接：
+```bash
+rm apps/xled
+```
 
 ## Submodules 管理
 
@@ -311,18 +285,18 @@ cp defconfig ../configs/defconfig
 在 `custom_apps/` 目录下创建新目录，参照 `xled` 的结构：
 - `<应用名>_main.c` - 主程序
 - `Kconfig` - 配置选项
-- `Make.defs` - Make 构建
+- `Make.defs` - Make 构建定义
+- `Makefile` - Make 构建脚本
 - `CMakeLists.txt` - CMake 构建
 
-然后修改 `scripts/build.sh` 添加新的符号链接和 patch 逻辑。
+然后创建符号链接到 `apps/` 目录即可，NuttX 会自动发现新应用。
 
 ## 工作原理
 
-构建脚本采用以下策略集成自定义应用：
+构建采用以下策略集成自定义应用：
 
 1. **符号链接**：将 `custom_apps/xled` 链接到 `apps/xled`
-2. **临时 patch**：修改 `apps/` 下的 Kconfig、Make.defs、CMakeLists.txt
-3. **恢复原始状态**：`./scripts/build.sh restore` 可恢复 apps submodule
+2. **自动发现**：NuttX 使用 `mkkconfig` 工具自动扫描 `apps/` 目录下的应用并生成 Kconfig
 
 这种方式不污染 submodule 仓库，同时保持构建兼容性。
 

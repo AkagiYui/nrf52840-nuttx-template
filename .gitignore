@@ -9,6 +9,11 @@
 .config
 .config.old
 
+# NuttX build artifacts
+.built
+.depend
+Make.dep
+
 # IDE files
 .vscode/
 .idea/
